@@ -132,22 +132,31 @@
 
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        function checkPassword() {
+        function checkPasswordAndSignIn() {
             const password = prompt("비밀번호를 입력하세요:", "");
             // 여기에서 비밀번호를 변경하세요.
-            const correctPassword = "wlsdkrhkdgus0913"; 
+            const correctPassword = "wlsgus0913"; 
 
             if (password === correctPassword) {
-                document.querySelector('.container').style.display = 'block';
+                auth.signInAnonymously()
+                    .then(() => {
+                        document.querySelector('.container').style.display = 'block';
+                        initializeDataListener();
+                    })
+                    .catch((error) => {
+                        console.error("Anonymous sign-in failed:", error);
+                        alert("인증에 실패했습니다. 페이지를 새로고침 해주세요.");
+                    });
             } else {
                 alert("비밀번호가 틀렸습니다.");
                 document.body.innerHTML = '<h1 style="text-align:center; color:red;">접근이 거부되었습니다.</h1>';
             }
         }
-        checkPassword();
+        checkPasswordAndSignIn();
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -163,8 +172,9 @@
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
-        const budgetRef = database.ref('budget');
+        let budgetRef;
 
         // Initial data to seed the database if it's empty
         const initialData = [
@@ -294,16 +304,19 @@
             `;
         }
 
-        budgetRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                budgetData = data;
-            } else {
-                budgetData = initialData;
-                syncWithFirebase();
-            }
-            renderTable();
-        });
+        function initializeDataListener() {
+            budgetRef = database.ref('budget');
+            budgetRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    budgetData = data;
+                } else {
+                    budgetData = initialData;
+                    syncWithFirebase();
+                }
+                renderTable();
+            });
+        }
     </script>
 </body>
 </html>
