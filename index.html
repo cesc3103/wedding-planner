@@ -83,6 +83,43 @@
             overflow-x: auto;
         }
 
+        /* Password Modal Styles */
+        #password-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .modal-content input {
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            width: 200px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .modal-content button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #e83e8c;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
         /* Responsive styles for mobile */
         @media screen and (max-width: 768px) {
             .table-container {
@@ -96,32 +133,33 @@
                 width: 100%;
             }
             table tr {
-                margin-bottom: 15px;
+                margin-bottom: 20px;
                 border: 1px solid #ddd;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                padding: 10px;
             }
             table td {
                 text-align: right;
-                padding-left: 50%;
+                padding: 8px 0;
                 position: relative;
                 border: none;
                 border-bottom: 1px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
             }
             table td::before {
                 content: attr(data-label);
-                position: absolute;
-                left: 10px;
-                width: calc(50% - 20px);
-                padding-right: 10px;
-                white-space: nowrap;
-                text-align: left;
                 font-weight: bold;
+                text-align: left;
+                padding-right: 10px;
             }
             table tr td:last-child {
                 border-bottom: 0;
             }
             .input-cell {
                 text-align: right;
+                width: 60%; /* Adjust width as needed */
             }
             .summary-section {
                 flex-direction: column;
@@ -129,10 +167,23 @@
             .summary-table {
                 width: 100%;
             }
+            td[data-label="남은 금액"] {
+                padding-top: 12px;
+                padding-bottom: 12px;
+            }
         }
     </style>
 </head>
 <body>
+
+<div id="password-modal">
+    <div class="modal-content">
+        <h2>비밀번호 입력</h2>
+        <input type="password" id="password-input" placeholder="비밀번호">
+        <button id="password-submit">확인</button>
+    </div>
+</div>
+
 <div class="container" style="display: none;">
     <h1>💍 결혼준비 예산리스트 💍</h1>
 
@@ -184,27 +235,6 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <script>
-        function checkPasswordAndSignIn() {
-            const password = prompt("비밀번호를 입력하세요:", "");
-            // 여기에서 비밀번호를 변경하세요.
-            const correctPassword = "wlsgus0913"; 
-
-            if (password === correctPassword) {
-                auth.signInAnonymously()
-                    .then(() => {
-                        document.querySelector('.container').style.display = 'block';
-                        initializeDataListener();
-                    })
-                    .catch((error) => {
-                        console.error("Anonymous sign-in failed:", error);
-                        alert("인증에 실패했습니다. 페이지를 새로고침 해주세요.");
-                    });
-            } else {
-                alert("비밀번호가 틀렸습니다.");
-                document.body.innerHTML = '<h1 style="text-align:center; color:red;">접근이 거부되었습니다.</h1>';
-            }
-        }
-
         // Your web app's Firebase configuration
         const firebaseConfig = {
           apiKey: "AIzaSyAQtCfScAwYXRYtXJcoOH86lIswgRXlL0o",
@@ -222,6 +252,36 @@
         const auth = firebase.auth();
         const database = firebase.database();
         let budgetRef;
+
+        function handleLogin() {
+            const passwordInput = document.getElementById('password-input');
+            const password = passwordInput.value;
+            // 여기에서 비밀번호를 변경하세요.
+            const correctPassword = "wlsgus0913"; 
+
+            if (password === correctPassword) {
+                auth.signInAnonymously()
+                    .then(() => {
+                        document.getElementById('password-modal').style.display = 'none';
+                        document.querySelector('.container').style.display = 'block';
+                        initializeDataListener();
+                    })
+                    .catch((error) => {
+                        console.error("Anonymous sign-in failed:", error);
+                        alert("인증에 실패했습니다. 페이지를 새로고침 해주세요.");
+                    });
+            } else {
+                alert("비밀번호가 틀렸습니다.");
+                passwordInput.value = '';
+            }
+        }
+
+        document.getElementById('password-submit').addEventListener('click', handleLogin);
+        document.getElementById('password-input').addEventListener('keyup', function(event) {
+            if (event.key === "Enter") {
+                handleLogin();
+            }
+        });
 
         // Initial data to seed the database if it's empty
         const initialData = [
@@ -364,8 +424,6 @@
                 renderTable();
             });
         }
-
-        checkPasswordAndSignIn();
     </script>
 </body>
 </html>
