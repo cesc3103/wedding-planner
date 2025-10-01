@@ -131,45 +131,52 @@
             table, table tbody, table tr, table td {
                 display: block;
                 width: 100%;
+                box-sizing: border-box;
             }
             table tr {
                 margin-bottom: 20px;
                 border: 1px solid #ddd;
                 box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-                padding: 10px;
+                padding: 15px;
             }
             table td {
-                text-align: right;
-                padding: 8px 0;
-                position: relative;
+                padding: 10px 0;
                 border: none;
                 border-bottom: 1px solid #eee;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
+            }
+            table td:last-child {
+                border-bottom: none;
             }
             table td::before {
                 content: attr(data-label);
                 font-weight: bold;
-                text-align: left;
-                padding-right: 10px;
-            }
-            table tr td:last-child {
-                border-bottom: 0;
+                display: block;
+                margin-bottom: 8px;
+                color: #333;
             }
             .input-cell {
+                width: 100%;
+                font-size: 16px;
+                padding: 8px;
+            }
+            td[data-label="남은 금액"] {
+                font-size: 1.1em;
+                font-weight: bold;
+                color: #e83e8c;
+            }
+            .actions {
                 text-align: right;
-                width: 60%; /* Adjust width as needed */
+                padding-top: 15px;
+            }
+            .actions button {
+                padding: 8px 15px;
+                font-size: 14px;
             }
             .summary-section {
                 flex-direction: column;
             }
             .summary-table {
                 width: 100%;
-            }
-            td[data-label="남은 금액"] {
-                padding-top: 12px;
-                padding-bottom: 12px;
             }
         }
     </style>
