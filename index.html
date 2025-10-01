@@ -156,7 +156,6 @@
                 document.body.innerHTML = '<h1 style="text-align:center; color:red;">접근이 거부되었습니다.</h1>';
             }
         }
-        checkPasswordAndSignIn();
 
         // Your web app's Firebase configuration
         const firebaseConfig = {
@@ -317,6 +316,8 @@
                 renderTable();
             });
         }
+
+        checkPasswordAndSignIn();
     </script>
 </body>
 </html>
