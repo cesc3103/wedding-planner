@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Budget Planner</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #e83e8c;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .summary-section {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .summary-table {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        @media (min-width: 768px) {
+            .summary-table {
+                width: 48%;
+            }
+        }
+        .input-cell {
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            padding: 6px;
+            border-radius: 4px;
+        }
+        .actions {
+            text-align: center;
+        }
+        #add-row-btn {
+            display: block;
+            margin: 0 auto 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #e83e8c;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #total-summary {
+            text-align: center;
+            font-size: 1.2em;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .table-container {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container" style="display: none;">
+    <h1>💍 결혼준비 예산리스트 💍</h1>
+
+    <button id="add-row-btn">항목 추가</button>
+    <div class="table-container">
+        <table id="budget-table">
+            <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>세부항목</th>
+                    <th>총 금액</th>
+                    <th>결제한 금액</th>
+                    <th>남은 금액</th>
+                    <th>결제자</th>
+                    <th>비고</th>
+                    <th class="actions">삭제</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+    </div>
+
+    <h2>요약</h2>
+    <div class="summary-section">
+        <div class="summary-table">
+            <h3>카테고리별 지출</h3>
+            <table id="category-summary">
+                <!-- Summary by category -->
+            </table>
+        </div>
+        <div class="summary-table">
+            <h3>결제자별 지출</h3>
+            <table id="payer-summary">
+                <!-- Summary by payer -->
+            </table>
+        </div>
+    </div>
+
+    <div id="total-summary">
+        <!-- Total summary will be rendered here -->
+    </div>
+</div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <script>
+        function checkPassword() {
+            const password = prompt("비밀번호를 입력하세요:", "");
+            // 여기에서 비밀번호를 변경하세요.
+            const correctPassword = "wlsdkrhkdgus0913"; 
+
+            if (password === correctPassword) {
+                document.querySelector('.container').style.display = 'block';
+            } else {
+                alert("비밀번호가 틀렸습니다.");
+                document.body.innerHTML = '<h1 style="text-align:center; color:red;">접근이 거부되었습니다.</h1>';
+            }
+        }
+        checkPassword();
+
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+          apiKey: "AIzaSyAQtCfScAwYXRYtXJcoOH86lIswgRXlL0o",
+          authDomain: "wedding-planner-127b9.firebaseapp.com",
+          databaseURL: "https://wedding-planner-127b9-default-rtdb.firebaseio.com",
+          projectId: "wedding-planner-127b9",
+          storageBucket: "wedding-planner-127b9.appspot.com",
+          messagingSenderId: "548060586513",
+          appId: "1:548060586513:web:0c9088d8804046d88c47b0",
+          measurementId: "G-ESFDW3FM29"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const budgetRef = database.ref('budget');
+
+        // Initial data to seed the database if it's empty
+        const initialData = [
+            // 본식
+            { category: '본식', item: '대관료(계약금)', total: 3000000, paid: 3000000, payer: '예랑', notes: '웨스턴베니비스' },
+            { category: '본식', item: '대관료(잔금)', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '본식', item: '식대', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '본식', item: '본식 부케', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '본식', item: '폐백', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '본식', item: '사회자', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '본식', item: '축가, 축사', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '본식', item: '가방순이', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '본식', item: '헬퍼비', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '본식', item: '본식스냅', total: 1245000, paid: 300000, payer: '예신', notes: '딥 다운 그린' },
+            { category: '본식', item: '본식DVD', total: 0, paid: 0, payer: '', notes: '' },
+            // 스드메
+            { category: '스드메', item: '스드메 계약금', total: 536900, paid: 536900, payer: '예신', notes: '베리굿 웨딩, 추후 달라질 수 있음' },
+            { category: '스드메', item: '중도금', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '스드메', item: '잔금', total: 0, paid: 0, payer: '', notes: '' },
+            // 스튜디오촬영
+            { category: '스튜디오촬영', item: '원본+수정본', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '스튜디오촬영', item: '헤어변형', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '스튜디오촬영', item: '헬퍼비', total: 0, paid: 0, payer: '', notes: '' },
+            // 예물, 예복
+            { category: '예물, 예복', item: '웨딩밴드', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '예물, 예복', item: '신랑예복', total: 0, paid: 0, payer: '', notes: '' },
+            // 신혼여행
+            { category: '신혼여행', item: '항공권', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '신혼여행', item: '숙소', total: 0, paid: 0, payer: '', notes: '' },
+            // 신혼집
+            { category: '신혼집', item: '계약금', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '신혼집', item: '잔금', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '신혼집', item: '인테리어', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '신혼집', item: '가전', total: 0, paid: 0, payer: '', notes: '' },
+            { category: '신혼집', item: '가구', total: 0, paid: 0, payer: '', notes: '' },
+        ];
+
+        let budgetData = [];
+
+        const budgetTableBody = document.querySelector('#budget-table tbody');
+        const categorySummaryTable = document.getElementById('category-summary');
+        const payerSummaryTable = document.getElementById('payer-summary');
+        const totalSummaryDiv = document.getElementById('total-summary');
+
+        function syncWithFirebase() {
+            const cleanedData = budgetData.filter(item => item !== null);
+            budgetRef.set(cleanedData);
+        }
+
+        function renderTable() {
+            budgetTableBody.innerHTML = '';
+            budgetData.forEach((data, index) => {
+                if (!data) return;
+                const row = document.createElement('tr');
+                const remaining = data.total - data.paid;
+                row.innerHTML = `
+                    <td><input type="text" class="input-cell" value="${data.category}" onchange="updateValue(${index}, 'category', this.value)"></td>
+                    <td><input type="text" class="input-cell" value="${data.item}" onchange="updateValue(${index}, 'item', this.value)"></td>
+                    <td><input type="number" class="input-cell" value="${data.total}" onchange="updateValue(${index}, 'total', this.value)"></td>
+                    <td><input type="number" class="input-cell" value="${data.paid}" onchange="updateValue(${index}, 'paid', this.value)"></td>
+                    <td>${remaining.toLocaleString()}</td>
+                    <td><input type="text" class="input-cell" value="${data.payer}" onchange="updateValue(${index}, 'payer', this.value)"></td>
+                    <td><input type="text" class="input-cell" value="${data.notes}" onchange="updateValue(${index}, 'notes', this.value)"></td>
+                    <td class="actions"><button onclick="deleteRow(${index})">X</button></td>
+                `;
+                budgetTableBody.appendChild(row);
+            });
+            renderSummaries();
+        }
+
+        function updateValue(index, key, value) {
+            if (key === 'total' || key === 'paid') {
+                value = parseInt(value, 10) || 0;
+            }
+            budgetData[index][key] = value;
+            syncWithFirebase();
+        }
+
+        function addRow() {
+            budgetData.push({ category: '', item: '', total: 0, paid: 0, payer: '', notes: '' });
+            syncWithFirebase();
+        }
+
+        function deleteRow(index) {
+            if (confirm('이 항목을 삭제하시겠습니까?')) {
+                budgetData.splice(index, 1);
+                syncWithFirebase();
+            }
+        }
+
+        document.getElementById('add-row-btn').addEventListener('click', addRow);
+
+        function renderSummaries() {
+            const validData = budgetData.filter(item => item);
+            const categoryTotals = validData.reduce((acc, item) => {
+                if(item.category) acc[item.category] = (acc[item.category] || 0) + item.paid;
+                return acc;
+            }, {});
+
+            categorySummaryTable.innerHTML = '<tr><th>카테고리</th><th>지출 합계</th></tr>';
+            for (const category in categoryTotals) {
+                const row = categorySummaryTable.insertRow();
+                row.innerHTML = `<td>${category}</td><td>${categoryTotals[category].toLocaleString()}</td>`;
+            }
+
+            const payerTotals = validData.reduce((acc, item) => {
+                if (item.payer) {
+                    acc[item.payer] = (acc[item.payer] || 0) + item.paid;
+                }
+                return acc;
+            }, {});
+            
+            payerSummaryTable.innerHTML = '<tr><th>결제자</th><th>지출 합계</th></tr>';
+            for (const payer in payerTotals) {
+                const row = payerSummaryTable.insertRow();
+                row.innerHTML = `<td>${payer}</td><td>${payerTotals[payer].toLocaleString()}</td>`;
+            }
+
+            const totalBudget = validData.reduce((acc, item) => acc + item.total, 0);
+            const totalPaid = validData.reduce((acc, item) => acc + item.paid, 0);
+            const totalRemaining = totalBudget - totalPaid;
+
+            totalSummaryDiv.innerHTML = `
+                <strong>총 예산:</strong> ${totalBudget.toLocaleString()} 원 | 
+                <strong>총 지출:</strong> ${totalPaid.toLocaleString()} 원 | 
+                <strong>남은 금액:</strong> ${totalRemaining.toLocaleString()} 원
+            `;
+        }
+
+        budgetRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                budgetData = data;
+            } else {
+                budgetData = initialData;
+                syncWithFirebase();
+            }
+            renderTable();
+        });
+    </script>
+</body>
+</html>
