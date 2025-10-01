@@ -82,6 +82,54 @@
         .table-container {
             overflow-x: auto;
         }
+
+        /* Responsive styles for mobile */
+        @media screen and (max-width: 768px) {
+            .table-container {
+                overflow-x: visible;
+            }
+            table thead {
+                display: none;
+            }
+            table, table tbody, table tr, table td {
+                display: block;
+                width: 100%;
+            }
+            table tr {
+                margin-bottom: 15px;
+                border: 1px solid #ddd;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            }
+            table td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+                border: none;
+                border-bottom: 1px solid #eee;
+            }
+            table td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 10px;
+                width: calc(50% - 20px);
+                padding-right: 10px;
+                white-space: nowrap;
+                text-align: left;
+                font-weight: bold;
+            }
+            table tr td:last-child {
+                border-bottom: 0;
+            }
+            .input-cell {
+                text-align: right;
+            }
+            .summary-section {
+                flex-direction: column;
+            }
+            .summary-table {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -230,14 +278,14 @@
                 const row = document.createElement('tr');
                 const remaining = data.total - data.paid;
                 row.innerHTML = `
-                    <td><input type="text" class="input-cell" value="${data.category}" onchange="updateValue(${index}, 'category', this.value)"></td>
-                    <td><input type="text" class="input-cell" value="${data.item}" onchange="updateValue(${index}, 'item', this.value)"></td>
-                    <td><input type="number" class="input-cell" value="${data.total}" onchange="updateValue(${index}, 'total', this.value)"></td>
-                    <td><input type="number" class="input-cell" value="${data.paid}" onchange="updateValue(${index}, 'paid', this.value)"></td>
-                    <td>${remaining.toLocaleString()}</td>
-                    <td><input type="text" class="input-cell" value="${data.payer}" onchange="updateValue(${index}, 'payer', this.value)"></td>
-                    <td><input type="text" class="input-cell" value="${data.notes}" onchange="updateValue(${index}, 'notes', this.value)"></td>
-                    <td class="actions"><button onclick="deleteRow(${index})">X</button></td>
+                    <td data-label="구분"><input type="text" class="input-cell" value="${data.category}" onchange="updateValue(${index}, 'category', this.value)"></td>
+                    <td data-label="세부항목"><input type="text" class="input-cell" value="${data.item}" onchange="updateValue(${index}, 'item', this.value)"></td>
+                    <td data-label="총 금액"><input type="number" class="input-cell" value="${data.total}" onchange="updateValue(${index}, 'total', this.value)"></td>
+                    <td data-label="결제한 금액"><input type="number" class="input-cell" value="${data.paid}" onchange="updateValue(${index}, 'paid', this.value)"></td>
+                    <td data-label="남은 금액">${remaining.toLocaleString()}</td>
+                    <td data-label="결제자"><input type="text" class="input-cell" value="${data.payer}" onchange="updateValue(${index}, 'payer', this.value)"></td>
+                    <td data-label="비고"><input type="text" class="input-cell" value="${data.notes}" onchange="updateValue(${index}, 'notes', this.value)"></td>
+                    <td data-label="삭제" class="actions"><button onclick="deleteRow(${index})">X</button></td>
                 `;
                 budgetTableBody.appendChild(row);
             });
